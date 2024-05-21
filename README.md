@@ -9,3 +9,7 @@ Please feel free to make forks or pull requests, just ensure you give me credit 
 The data is owned by Transperth and I am not affiliated in any way whatsoever, even though I would like to be.
 
 Enjoy 😄
+
+
+### Want to use the publically released version?
+Visit my site [here](https://trainguy.industries/tracker).
