@@ -47,6 +47,14 @@
                 position: relative;
                 display: flex;
             }
+            .transwa-platform {
+                width: 10px;
+                height: 10px;
+                background-color: rgb(208,68,36);
+                border: black 2px solid;
+                position: relative;
+                display: flex;
+            }
             .label {
                 position: absolute;
                 width: 100px;
@@ -235,7 +243,7 @@
                 <div class="interchange" id="92" style="position: absolute; top: 670px; left: 660px;">
                     <div class="label" style="top: -15px; left: -43px;"><p>Cockburn Central</p></div>
                     <div class="platform" id="COC1"></div>
-                    <div class="platform-offline" id="COC3"><p style="position: absolute; top: -6px; left: -1px;">x</p></div>
+                    <div class="platform-offline" id="COC3"><p style="position: absolute; top: -7px; left: -1px;">x</p></div>
                     <div class="platform" id="COC2"></div>
                 </div>
                 <div class="interchange" id="180" style="position: absolute; top: 670px; left: 580px;">
@@ -360,7 +368,7 @@
                     <div class="platform" id="NFR2"></div>
                 </div>
                 <div class="interchange" id="100" style="position: absolute; top: 510px; left: 150px;">
-                    <div class="label" style="bottom: 10px; left: -90px;"><p>Fremantle</p></div>
+                    <div class="label" style="bottom: -15px; left: -44px;"><p>Fremantle</p></div>
                     <div class="platform" id="FRE1"></div>
                     <div class="platform" id="FRE2"></div>
                     <div class="platform" id="FRE3"></div>
@@ -391,13 +399,14 @@
                 <div style="position: absolute; top: 467.5px; left: 1200px; background-color: #44c2b2; width: 150px; height: 2.5px;"></div>
                 <div style="position: absolute; top: 452.5px; left: 1350px; background-color: #44c2b2; width: 50px; height: 2.5px; transform: rotateZ(-10deg);"></div>
                 <div style="position: absolute; top: 472.5px; left: 1350px; background-color: #44c2b2; width: 50px; height: 2.5px; transform: rotateZ(10deg);"></div>
-                <div class="interchange" id="97" style="position: absolute; top: 450px; left: 1200px;">
+                <div class="interchange" id="97" style="position: absolute; top: 440px; left: 1200px;">
                     <div class="label" style="top: -15px; left: -43px;"><p>East Perth</p></div>
+                    <div class="transwa-platform"><p style="position: absolute; top: -2px; left: -68px; font-size: 8px; color: #ffffff; font-weight: bold;">TransWA/JBR<span>&#8594;</span></p></div>
                     <div class="platform" id="EPR2"></div>
                     <div class="platform" id="EPR1"></div>
                 </div>
                 <div class="interchange" id="122" style="position: absolute; top: 450px; left: 1250px;">
-                    <div class="label" style="bottom: -15px; left: -43px;"><p>Mount Lawley</p></div>
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Mt Lawley</p></div>
                     <div class="platform" id="MLY2"></div>
                     <div class="platform" id="MLY1"></div>
                 </div>
@@ -445,6 +454,7 @@
                     <div class="label" style="bottom: -15px; left: -43px;"><p>Midland</p></div>
                     <div class="platform" id="MID3"></div>
                     <div class="platform" id="MID2"></div>
+                    <div class="transwa-platform" id="MID1"><p style="position: absolute; top: -1px; left: 13px; font-size: 8px; color: #ffffff; font-weight: bold;"><span>&#8592;</span>TransWA</p></div>
                 </div>
             </div>
             <div id="airport-line">
@@ -503,7 +513,7 @@
                 <div style="position: absolute; top: 605px; left: 1650px; background-color: none; width: 90px; height: 5px; border-bottom: 5px dashed #5e4576; transform: rotateZ(45deg);"></div>
                 <div style="position: absolute; top: 615px; left: 1650px; background-color: none; width: 80px; height: 5px; border-bottom: 5px dashed #5e4576; transform: rotateZ(45deg);"></div>
                 <div class="interchange" id="182" style="position: absolute; top: 550px; left: 1250px;">
-                    <div class="label" style="top: -15px; left: -43px;"><p>Perth Stadium</p></div>
+                    <div class="label" style="top: -15px; left: -43px;"><p>Stadium</p></div>
                     <div class="platform" id="BPK6"></div>
                     <div class="platform" id="BPK5"></div>
                     <div class="platform" id="BPK4"></div>
@@ -597,7 +607,7 @@
                 <div class="platform" id="PER6"></div>
                 <div class="platform" id="PER5"></div>
                 <div class="platform" id="PER4"></div>
-                <div class="platform-offline" id="PER3"><p style="position: absolute; top: -4px; left: -1px; color: #000000; font-size: 11px; font-weight: bold;">3</p></div>
+                <div class="transwa-platform" id="PER3"><p style="position: absolute; top: -1px; left: 11px; font-size: 8px; color: #ffffff; font-weight: bold;"><span>&#8592;</span>Australind</p></div>
             </div>
             <div class="interchange" id="116" style="position: absolute; top: 520px; left: 1075px;">
                 <div class="label" style="top: -15px; left: -43px;"><p>McIver</p></div>
@@ -669,15 +679,9 @@
         // scaling, but that's not really a problem just gets silly if you zoom in LOL
         // i do think the addition of the future projects clutters it a bit, especially with the box you're putting around it (on that note as well, where's MEL? and why does armadale line only go up to gosnells?)
         // the selected trip lagging behind the updating (just saw you mention this)
-        // considering you mark airport central with an airplane, you could do the same for redcliffe + adding the terminal numbers (also adding a certain special events "E" for showgrounds!)
-        // this is a bit more picky, but just for continuity between the tracker and app some of the station names are different - official network uses "Mt Lawley" not "Mount Lawley", "Stadium" not "Perth Stadium"
+        // considering you mark airport central with an airplane, you could do the same for redcliffe + adding the terminal numbers
         // every other terminus' name is below or above the station, but fremantle's is next to it?
-        // the perth station platform 3 marker is too big for the box :kek:
-        // again, VERY picky but the PUG marker could be horizontal rather than slanted :isaac_shrug:
-        // despite the fact you've included platform 9, there are no tracks leading out of it even though trains do run on it. i know it serves multiple lines when needed but it would be nice to show it's actually used as well (i can understant the lack of tracks for P3 because it's a TransWA platform).
         // maybe some marker to point out that Nowergup Depot isn't a station stop :kek: :kek: :kek: i know it says "Depot" but there are some examples all over the world of stuff like that which are publicly accessible so maybe just a hint? also, why include nowergup depot but not claisebrook or mandurah? as well as this... ✨ sidings ✨
-        // showgrounds has three platforms, not two
-        // if you've included the australind platform at perth, you could also include the other regional platforms at east perth and midland 🤷‍♀️
 
         const NS_URI = "http://services.pta.wa.gov.au/";
         const secondDigitIsNine = /^\d9/;
