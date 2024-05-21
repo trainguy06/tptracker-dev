@@ -1,0 +1,1035 @@
+<!DOCTYPE html>
+<html>
+    <head>
+        <title>Transperth Tracker</title>
+        <style>
+            * {
+                margin: 0;
+                padding: 0;
+                box-sizing: border-box;
+                font-family: Arial, sans-serif;
+            }
+            body {
+                background-color: black;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                height: 100vh;
+            }
+            .map {
+                position: relative;
+                width: 2000px;
+                height: 1000px;
+            }
+            .interchange {
+                background-color: white;
+                padding: 2px;
+                border-radius: 5px;
+            }
+            .platform {
+                width: 10px;
+                height: 10px;
+                background-color: white;
+                border: black 2px solid;
+                position: relative;
+                display: flex;
+            }
+            #depot {
+                display: grid;
+                grid-template-columns: repeat(10, 100px);
+                gap: 5px;
+            }
+            .platform-offline {
+                width: 10px;
+                height: 10px;
+                background-color: rgb(255, 0, 0);
+                border: black 2px solid;
+                position: relative;
+                display: flex;
+            }
+            .label {
+                position: absolute;
+                width: 100px;
+                text-align: center;
+            }
+            .label > p {
+                color: white;
+                font-size: 10px;
+            }
+            .diagonal {
+                transform: rotateZ(45deg);
+            }
+            .diagonal > .platform > .trip {
+                transform: translate(-5px, -12px) rotateZ(-45deg);
+            }
+            .trip {
+                width: 40px;
+                height: 10px;
+                background-color: red;
+                border-radius: 5px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                color: black;
+                font-size: 8px;
+                transform: translate(-2px, -2px);
+                flex: 0 0 auto;
+            }
+            .pred-trip {
+                width: 100px;
+                height: 40px;
+                background-color: rgb(17, 0, 255);
+                border-radius: 5px;
+                display: flex;
+                align-items: center;
+                padding-left: 5px;
+                color: black;
+                font-size: 8px;
+                transform: translate(-2px, -2px);
+                flex: 0 0 auto;
+                position: relative;
+            }
+            .invisible {
+                width: 5px;
+            }
+            .cseriesdepot {
+                position: absolute;
+                top: 0px;
+                left: 50px;
+                height: 40px;
+                width: 50px;
+                background-color: rgba(0, 0, 255, 0.281);
+            }
+        </style>
+    </head>
+    <body>
+        <div class="depot" style="position: absolute; top: 50px; left: 50px;">
+            <div class="label" style="top: -25px; left: -43px;"><p>Upcoming Services</p></div>
+            <div id="depot"></div>
+        </div>
+        <div id="service-info" style="position: absolute; top: 50px; right: 50px; color: white; text-align: right;">
+        </div>
+        <div class="map">
+            <div style="position: absolute; top: 550px; left: 1425px; height: 245px; width: 425px; background-color: rgba(246, 168, 0, 0.35); border: rgba(0, 0, 0, 0.35) 25px dashed;"></div>
+            <div style="position: absolute; top: 720px; left: 750px; height: 75px; width: 675px; background-color: rgba(246, 168, 0, 0.35); border: rgba(0, 0, 0, 0.35) 25px dashed;"></div>
+            <div style="position: absolute; top: 345px; left: 50px; height: 75px; width: 160px; background-color: rgba(246, 168, 0, 0.35); border: rgba(0, 0, 0, 0.35) 25px dashed;"></div>
+            <div id="joondalup-line">
+                <div style="position: absolute; top: 375px; left: 60px; background-color: none; width: 200px; height: 5px; border-bottom: #959300 dashed 5px;"></div>
+                <div style="position: absolute; top: 385px; left: 60px; background-color: none; width: 200px; height: 5px; border-bottom: #959300 dashed 5px;"></div>
+                <div style="position: absolute; top: 375px; left: 240px; background-color: #959300; width: 660px; height: 5px;"></div>
+                <div style="position: absolute; top: 385px; left: 240px; background-color: #959300; width: 660px; height: 5px;"></div>
+                <div style="position: absolute; top: 580px; left: 975px; background-color: #959300; width: 5px; height: 70px;"></div>
+                <div style="position: absolute; top: 457px; left: 975px; background-color: #959300; width: 5px; height: 150px;"></div>
+                <div style="position: absolute; top: 453px; left: 985px; background-color: #959300; width: 5px; height: 150px;"></div>
+                <div style="position: absolute; top: 420px; left: 890px; background-color: #959300; width: 102px; height: 5px; transform: rotateZ(45deg);"></div>
+                <div style="position: absolute; top: 415px; left: 895px; background-color: #959300; width: 110px; height: 5px; transform: rotateZ(45deg);"></div>
+                <div class="interchange" id="111" style="position: absolute; top: 370px; left: 900px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Leederville</p></div>
+                    <div class="platform" id="LED1"></div>
+                    <div class="platform" id="LED2"></div>
+                </div>
+                <div class="interchange" id="101" style="position: absolute; top: 370px; left: 840px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Glendalough</p></div>
+                    <div class="platform" id="GLN1"></div>
+                    <div class="platform" id="GLN2"></div>
+                </div>
+                <div class="interchange" id="139" style="position: absolute; top: 370px; left: 780px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Stirling</p></div>
+                    <div class="platform" id="STG1"></div>
+                    <div class="platform" id="STG2"></div>
+                </div>
+                <div class="interchange" id="147" style="position: absolute; top: 370px; left: 720px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Warwick</p></div>
+                    <div class="platform" id="WRK1"></div>
+                    <div class="platform" id="WRK2"></div>
+                </div>
+                <div class="interchange" id="104" style="position: absolute; top: 370px; left: 660px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Greenwood</p></div>
+                    <div class="platform" id="GRN1"></div>
+                    <div class="platform" id="GRN2"></div>
+                </div>
+                <div class="interchange" id="151" style="position: absolute; top: 370px; left: 600px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Whitfords</p></div>
+                    <div class="platform" id="WTF1"></div>
+                    <div class="platform" id="WTF2"></div>
+                </div>
+                <div class="interchange" id="98" style="position: absolute; top: 370px; left: 540px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Edgewater</p></div>
+                    <div class="platform" id="EDG1"></div>
+                    <div class="platform" id="EDG2"></div>
+                </div>
+                <div class="interchange" id="106" style="position: absolute; top: 370px; left: 480px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Joondalup</p></div>
+                    <div class="platform" id="JDP1"></div>
+                    <div class="platform" id="JDP2"></div>
+                </div>
+                <div class="interchange" id="94" style="position: absolute; top: 370px; left: 420px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Currambine</p></div>
+                    <div class="platform" id="CUR1"></div>
+                    <div class="platform" id="CUR2"></div>
+                </div>
+                <div class="interchange" id="91" style="position: absolute; top: 370px; left: 360px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Clarkson</p></div>
+                    <div class="platform" id="CLK1"></div>
+                    <div class="platform" id="CLK2"></div>
+                </div>
+                <div class="interchange" id="0" style="position: absolute; top: 370px; left: 300px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Nowergup Depot</p></div>
+                    <div class="platform" id="NGPZ"></div>
+                    <div class="platform" id="NGPR"></div>
+                </div>
+                <div class="interchange" id="175" style="position: absolute; top: 370px; left: 240px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Butler</p></div>
+                    <div class="platform" id="BUT1"></div>
+                    <div class="platform" id="BUT2"></div>
+                </div>
+                <div class="interchange" id="175" style="position: absolute; top: 370px; left: 180px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Alkimos</p></div>
+                    <div class="platform" id="ALK1"></div>
+                    <div class="platform" id="ALK2"></div>
+                </div>
+                <div class="interchange" id="175" style="position: absolute; top: 370px; left: 120px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Eglinton</p></div>
+                    <div class="platform" id="EGL1"></div>
+                    <div class="platform" id="EGL2"></div>
+                </div>
+                <div class="interchange" id="175" style="position: absolute; top: 370px; left: 60px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Yanchep</p></div>
+                    <div class="platform" id="YAN1"></div>
+                    <div class="platform" id="YAN2"></div>
+                    <div class="platform" id="YAN3"></div>
+                </div>
+            </div>
+            <div id="mandurah-line">
+                <div style="position: absolute; top: 722px; left: 660px; background-color: none; width: 105px; height: 5px; border-bottom: 5px dashed #5e4576; transform: rotateZ(45deg);"></div>
+                <div style="position: absolute; top: 675px; left: 100px; background-color: #d25f15; width: 800px; height: 5px;"></div>
+                <div style="position: absolute; top: 685px; left: 100px; background-color: #d25f15; width: 540px; height: 5px;"></div>
+                <div style="position: absolute; top: 690px; left: 635px; background-color: #d25f15; width: 30px; height: 5px; transform: rotateZ(25deg);"></div>
+                <div style="position: absolute; top: 695px; left: 670px; background-color: #d25f15; width: 50px; height: 5px;"></div>
+                <div style="position: absolute; top: 689px; left: 717px; background-color: #d25f15; width: 30px; height: 5px; transform: rotateZ(-25deg);"></div>
+                <div style="position: absolute; top: 685px; left: 750px; background-color: #d25f15; width: 150px; height: 5px;"></div>
+                <div style="position: absolute; top: 665px; left: 900px; background-color: #d25f15; width: 80px; height: 5px; transform: rotateZ(-20deg);"></div>
+                <div style="position: absolute; top: 675px; left: 900px; background-color: #d25f15; width: 90px; height: 5px; transform: rotateZ(-20deg);"></div>
+                <div style="position: absolute; top: 590px; left: 985px; background-color: #d25f15; width: 5px; height: 70px;"></div>
+                <div class="interchange diagonal" id="177" style="position: absolute; top: 650px; left: 970px; display: flex;">
+                    <div class="label" style="top: -30px; left: 15px; transform: rotateZ(-45deg);"><p>Elizabeth Quay</p></div>
+                    <div class="platform" id="ESP1"></div>
+                    <div class="invisible"></div>
+                    <div class="platform" id="ESP2"></div>
+                </div>
+                <div class="interchange" id="81" style="position: absolute; top: 670px; left: 900px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Canning Bridge</p></div>
+                    <div class="platform" id="CBR1"></div>
+                    <div class="platform" id="CBR2"></div>
+                </div>
+                <div class="interchange" id="79" style="position: absolute; top: 670px; left: 820px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Bull Creek</p></div>
+                    <div class="platform" id="BUL1"></div>
+                    <div class="platform" id="BUL2"></div>
+                </div>
+                <div class="interchange" id="123" style="position: absolute; top: 670px; left: 740px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Murdoch</p></div>
+                    <div class="platform" id="MUR1"></div>
+                    <div class="platform" id="MUR2"></div>
+                </div>
+                <div class="interchange" id="92" style="position: absolute; top: 670px; left: 660px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Cockburn Central</p></div>
+                    <div class="platform" id="COC1"></div>
+                    <div class="platform-offline" id="COC3"><p style="position: absolute; top: -6px; left: -1px;">x</p></div>
+                    <div class="platform" id="COC2"></div>
+                </div>
+                <div class="interchange" id="180" style="position: absolute; top: 670px; left: 580px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Aubin Grove</p></div>
+                    <div class="platform" id="AUB1"></div>
+                    <div class="platform" id="AUB2"></div>
+                </div>
+                <div class="interchange" id="110" style="position: absolute; top: 670px; left: 500px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Kwinana</p></div>
+                    <div class="platform" id="KWI1"></div>
+                    <div class="platform" id="KWI2"></div>
+                </div>
+                <div class="interchange" id="148" style="position: absolute; top: 670px; left: 420px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Wellard</p></div>
+                    <div class="platform" id="WRD1"></div>
+                    <div class="platform" id="WRD2"></div>
+                </div>
+                <div class="interchange" id="134" style="position: absolute; top: 670px; left: 340px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Rockingham</p></div>
+                    <div class="platform" id="RCK1"></div>
+                    <div class="platform" id="RCK2"></div>
+                </div>
+                <div class="interchange" id="146" style="position: absolute; top: 670px; left: 260px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Warnbro</p></div>
+                    <div class="platform" id="WAR1"></div>
+                    <div class="platform" id="WAR2"></div>
+                </div>
+                <div class="interchange" id="193" style="position: absolute; top: 670px; left: 180px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Lakelands</p></div>
+                    <div class="platform" id="LAL1"></div>
+                    <div class="platform" id="LAL2"></div>
+                </div>
+                <div class="interchange" id="114" style="position: absolute; top: 670px; left: 100px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Mandurah</p></div>
+                    <div class="platform" id="MAN1"></div>
+                    <div class="platform" id="MAN2"></div>
+                </div>
+            </div>
+            <div id="fremantle-line">
+                <div style="position: absolute; top: 530px; left: 160px; background-color: #003a79; width: 20px; height: 5px; transform: rotateZ(-30deg);"></div>
+                <div style="position: absolute; top: 515px; left: 150px; background-color: #003a79; width: 850px; height: 5px;"></div>
+                <div style="position: absolute; top: 525px; left: 150px; background-color: #003a79; width: 850px; height: 5px;"></div>
+                <div style="position: absolute; top: 530px; left: 950px; background-color: #003a79; width: 50px; height: 5px; transform: rotateZ(10deg);"></div>
+                <div style="position: absolute; top: 517.5px; left: 500px; background-color: #44c2b2; width: 500px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 527.5px; left: 500px; background-color: #44c2b2; width: 500px; height: 2.5px;"></div>
+                <div class="interchange" id="86" style="position: absolute; top: 510px; left: 900px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>City West</p></div>
+                    <div class="platform" id="CWS1"></div>
+                    <div class="platform" id="CWS2"></div>
+                </div>
+                <div class="interchange" id="150" style="position: absolute; top: 510px; left: 850px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>West Leederville</p></div>
+                    <div class="platform" id="WLE1"></div>
+                    <div class="platform" id="WLE2"></div>
+                </div>
+                <div class="interchange" id="140" style="position: absolute; top: 510px; left: 800px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Subiaco</p></div>
+                    <div class="platform" id="SUB1"></div>
+                    <div class="platform" id="SUB2"></div>
+                </div>
+                <div class="interchange" id="95" style="position: absolute; top: 510px; left: 750px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Daglish</p></div>
+                    <div class="platform" id="DAG1"></div>
+                    <div class="platform" id="DAG2"></div>
+                </div>
+                <div class="interchange" id="136" style="position: absolute; top: 510px; left: 700px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Shenton Park</p></div>
+                    <div class="platform" id="SPK1"></div>
+                    <div class="platform" id="SPK2"></div>
+                </div>
+                <div class="interchange" id="107" style="position: absolute; top: 510px; left: 650px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Karrakatta</p></div>
+                    <div class="platform" id="KAR1"></div>
+                    <div class="platform" id="KAR2"></div>
+                </div>
+                <div class="interchange" id="112" style="position: absolute; top: 510px; left: 600px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Loch Street</p></div>
+                    <div class="platform" id="LOC1"></div>
+                    <div class="platform" id="LOC2"></div>
+                </div>
+                <div class="interchange" id="138" style="position: absolute; top: 510px; left: 550px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Showgrounds</p></div>
+                    <div class="platform" id="SHO1"></div>
+                    <div class="platform" id="SHO2"></div>
+                </div>
+                <div class="interchange" id="90" style="position: absolute; top: 510px; left: 500px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Claremont</p></div>
+                    <div class="platform" id="CLA1"></div>
+                    <div class="platform" id="CLA2"></div>
+                </div>
+                <div class="interchange" id="142" style="position: absolute; top: 510px; left: 450px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Swanbourne</p></div>
+                    <div class="platform" id="SBN1"></div>
+                    <div class="platform" id="SBN2"></div>
+                </div>
+                <div class="interchange" id="103" style="position: absolute; top: 510px; left: 400px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Grant Street</p></div>
+                    <div class="platform" id="GRT1"></div>
+                    <div class="platform" id="GRT2"></div>
+                </div>
+                <div class="interchange" id="93" style="position: absolute; top: 510px; left: 350px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Cottesloe</p></div>
+                    <div class="platform" id="COT1"></div>
+                    <div class="platform" id="COT2"></div>
+                </div>
+                <div class="interchange" id="121" style="position: absolute; top: 510px; left: 300px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Mosman Park</p></div>
+                    <div class="platform" id="MOS1"></div>
+                    <div class="platform" id="MOS2"></div>
+                </div>
+                <div class="interchange" id="145" style="position: absolute; top: 510px; left: 250px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Victoria Street</p></div>
+                    <div class="platform" id="VST1"></div>
+                    <div class="platform" id="VST2"></div>
+                </div>
+                <div class="interchange" id="124" style="position: absolute; top: 510px; left: 200px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>North Fremantle</p></div>
+                    <div class="platform" id="NFR1"></div>
+                    <div class="platform" id="NFR2"></div>
+                </div>
+                <div class="interchange" id="100" style="position: absolute; top: 510px; left: 150px;">
+                    <div class="label" style="bottom: 10px; left: -90px;"><p>Fremantle</p></div>
+                    <div class="platform" id="FRE1"></div>
+                    <div class="platform" id="FRE2"></div>
+                    <div class="platform" id="FRE3"></div>
+                </div>
+            </div>
+            <div id="midland-line">
+                <div style="position: absolute; top: 519px; left: 1000px; background-color: #960048; width: 80px; height: 5px; transform: rotateZ(8deg);"></div>
+                <div style="position: absolute; top: 529px; left: 1000px; background-color: #960048; width: 80px; height: 5px; transform: rotateZ(8deg);"></div>
+                <div style="position: absolute; top: 525px; left: 1075px; background-color: #960048; width: 75px; height: 5px;"></div>
+                <div style="position: absolute; top: 535px; left: 1075px; background-color: #960048; width: 75px; height: 5px;"></div>
+                <div style="position: absolute; top: 505px; left: 1135px; background-color: #960048; width: 90px; height: 5px; transform: rotateZ(-60deg);"></div>
+                <div style="position: absolute; top: 490px; left: 1135px; background-color: #960048; width: 90px; height: 5px; transform: rotateZ(-60deg);"></div>
+                <div style="position: absolute; top: 455px; left: 1200px; background-color: #960048; width: 150px; height: 5px;"></div>
+                <div style="position: absolute; top: 465px; left: 1200px; background-color: #960048; width: 150px; height: 5px;"></div>
+                <div style="position: absolute; top: 450px; left: 1350px; background-color: #960048; width: 50px; height: 5px; transform: rotateZ(-10deg);"></div>
+                <div style="position: absolute; top: 470px; left: 1350px; background-color: #960048; width: 50px; height: 5px; transform: rotateZ(10deg);"></div>
+                <div style="position: absolute; top: 450px; left: 1412px; background-color: #960048; width: 50px; height: 5px; transform: rotateZ(10deg);"></div>
+                <div style="position: absolute; top: 470px; left: 1412px; background-color: #960048; width: 50px; height: 5px; transform: rotateZ(-10deg);"></div>
+                <div style="position: absolute; top: 455px; left: 1450px; background-color: #960048; width: 300px; height: 5px;"></div>
+                <div style="position: absolute; top: 465px; left: 1450px; background-color: #960048; width: 300px; height: 5px;"></div>
+                <div style="position: absolute; top: 521.5px; left: 1000px; background-color: #44c2b2; width: 80px; height: 2.5px; transform: rotateZ(8deg);"></div>
+                <div style="position: absolute; top: 531.5px; left: 1000px; background-color: #44c2b2; width: 80px; height: 2.5px; transform: rotateZ(8deg);"></div>
+                <div style="position: absolute; top: 527.5px; left: 1075px; background-color: #44c2b2; width: 75px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 537.5px; left: 1075px; background-color: #44c2b2; width: 75px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 505px; left: 1137.5px; background-color: #44c2b2; width: 90px; height: 2.5px; transform: rotateZ(-60deg);"></div>
+                <div style="position: absolute; top: 490px; left: 1137.5px; background-color: #44c2b2; width: 90px; height: 2.5px; transform: rotateZ(-60deg);"></div>
+                <div style="position: absolute; top: 457.5px; left: 1200px; background-color: #44c2b2; width: 150px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 467.5px; left: 1200px; background-color: #44c2b2; width: 150px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 452.5px; left: 1350px; background-color: #44c2b2; width: 50px; height: 2.5px; transform: rotateZ(-10deg);"></div>
+                <div style="position: absolute; top: 472.5px; left: 1350px; background-color: #44c2b2; width: 50px; height: 2.5px; transform: rotateZ(10deg);"></div>
+                <div class="interchange" id="97" style="position: absolute; top: 450px; left: 1200px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>East Perth</p></div>
+                    <div class="platform" id="EPR2"></div>
+                    <div class="platform" id="EPR1"></div>
+                </div>
+                <div class="interchange" id="122" style="position: absolute; top: 450px; left: 1250px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Mount Lawley</p></div>
+                    <div class="platform" id="MLY2"></div>
+                    <div class="platform" id="MLY1"></div>
+                </div>
+                <div class="interchange" id="115" style="position: absolute; top: 450px; left: 1300px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Maylands</p></div>
+                    <div class="platform" id="MAY2"></div>
+                    <div class="platform" id="MAY1"></div>
+                </div>
+                <div class="interchange" id="119" style="position: absolute; top: 450px; left: 1350px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Meltham</p></div>
+                    <div class="platform" id="MEL2"></div>
+                    <div class="platform" id="MEL1"></div>
+                </div>
+                <div class="interchange" id="74" style="position: absolute; top: 450px; left: 1450px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Ashfield</p></div>
+                    <div class="platform" id="ASH2"></div>
+                    <div class="platform" id="ASH1"></div>
+                </div>
+                <div class="interchange" id="75" style="position: absolute; top: 450px; left: 1500px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Bassendean</p></div>
+                    <div class="platform" id="BAS2"></div>
+                    <div class="platform" id="BAS1"></div>
+                </div>
+                <div class="interchange" id="141" style="position: absolute; top: 450px; left: 1550px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Success Hill</p></div>
+                    <div class="platform" id="SUC2"></div>
+                    <div class="platform" id="SUC1"></div>
+                </div>
+                <div class="interchange" id="105" style="position: absolute; top: 450px; left: 1600px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Guildford</p></div>
+                    <div class="platform" id="GFD2"></div>
+                    <div class="platform" id="GFD1"></div>
+                </div>
+                <div class="interchange" id="96" style="position: absolute; top: 450px; left: 1650px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>East Guildford</p></div>
+                    <div class="platform" id="EGF2"></div>
+                    <div class="platform" id="EGF1"></div>
+                </div>
+                <div class="interchange" id="152" style="position: absolute; top: 450px; left: 1700px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Woodbridge</p></div>
+                    <div class="platform" id="WBG2"></div>
+                    <div class="platform" id="WBG1"></div>
+                </div>
+                <div class="interchange" id="120" style="position: absolute; top: 450px; left: 1750px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Midland</p></div>
+                    <div class="platform" id="MID3"></div>
+                    <div class="platform" id="MID2"></div>
+                </div>
+            </div>
+            <div id="airport-line">
+                <div style="position: absolute; top: 475px; left: 1385px; background-color: #44c2b2; width: 90px; height: 5px; transform: rotateZ(55deg);"></div>
+                <div style="position: absolute; top: 500px; left: 1390px; background-color: #44c2b2; width: 80px; height: 5px; transform: rotateZ(45deg);"></div>
+                <div style="position: absolute; top: 515px; left: 1450px; background-color: #44c2b2; width: 150px; height: 5px;"></div>
+                <div style="position: absolute; top: 525px; left: 1450px; background-color: #44c2b2; width: 150px; height: 5px;"></div>
+                <div class="interchange" id="187" style="position: absolute; top: 510px; left: 1450px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Redcliffe</p></div>
+                    <div class="platform" id="RED2"></div>
+                    <div class="platform" id="RED1"></div>
+                </div>
+                <div class="interchange" id="188" style="position: absolute; top: 510px; left: 1525px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Airport Central</p></div>
+                    <img src="https://cdn2.iconfinder.com/data/icons/rental-icon/240/airport-512.png" style="position: absolute; bottom: -18px; left: 0px; height: 15px; width: 15px; filter: invert();">
+                    <div class="platform" id="APT2"></div>
+                    <div class="platform" id="APT1"></div>
+                </div>
+                <div class="interchange" id="189" style="position: absolute; top: 510px; left: 1600px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>High Wycombe</p></div>
+                    <div class="platform" id="FFL2"></div>
+                    <div class="platform" id="FFL1"></div>
+                </div>
+            </div>
+            <div id="armadale-line">
+                <div style="position: absolute; top: 555px; left: 1205px; background-color: gray; width: 50px; height: 5px;"></div>
+                <div style="position: absolute; top: 568px; left: 1190px; background-color: gray; width: 62px; height: 5px; transform: rotateZ(30deg);"></div>
+                <div style="position: absolute; top: 575px; left: 1205px; background-color: gray; width: 50px; height: 5px;"></div>
+                <div style="position: absolute; top: 585px; left: 1227px; background-color: gray; width: 25px; height: 5px;"></div>
+                <div style="position: absolute; top: 595px; left: 1220px; background-color: gray; width: 35px; height: 5px; transform: rotateZ(40deg);"></div>
+                <div style="position: absolute; top: 540px; left: 1000px; background-color: #f6a800; width: 50px; height: 5px; transform: rotateZ(10deg);"></div>
+                <div style="position: absolute; top: 545px; left: 1000px; background-color: #f6a800; width: 150px; height: 5px;"></div>
+                <div style="position: absolute; top: 555px; left: 1075px; background-color: #f6a800; width: 75px; height: 5px;"></div>
+                <div style="position: absolute; top: 545px; left: 1000px; background-color: #f6a800; width: 80px; height: 5px; transform: rotateZ(10deg);"></div>
+                <div style="position: absolute; top: 555px; left: 1150px; background-color: #f6a800; width: 110px; height: 5px; transform: rotateZ(12deg);"></div>
+                <div style="position: absolute; top: 575px; left: 1150px; background-color: #f6a800; width: 110px; height: 5px; transform: rotateZ(25deg);"></div>
+                <div style="position: absolute; top: 570px; left: 1250px; background-color: #f6a800; width: 110px; height: 5px; transform: rotateZ(5deg);"></div>
+                <div style="position: absolute; top: 590px; left: 1250px; background-color: #f6a800; width: 110px; height: 5px; transform: rotateZ(-8deg);"></div>
+                <div style="position: absolute; top: 575px; left: 1350px; background-color: #f6a800; width: 50px; height: 5px;"></div>
+                <div style="position: absolute; top: 585px; left: 1350px; background-color: #f6a800; width: 50px; height: 5px;"></div>
+                <div style="position: absolute; top: 555px; left: 1000px; background-color: #5e4576; width: 75px; height: 5px;"></div>
+                <div style="position: absolute; top: 557.5px; left: 1075px; background-color: #5e4576; width: 75px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 555px; left: 1000px; background-color: #5e4576; width: 75px; height: 2.5px; transform: rotateZ(-10deg);"></div>
+                <div style="position: absolute; top: 547.5px; left: 1075px; background-color: #5e4576; width: 75px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 557.5px; left: 1150px; background-color: #5e4576; width: 110px; height: 2.5px; transform: rotateZ(12deg);"></div>
+                <div style="position: absolute; top: 577.5px; left: 1150px; background-color: #5e4576; width: 110px; height: 2.5px; transform: rotateZ(25deg);"></div>
+                <div style="position: absolute; top: 572.5px; left: 1250px; background-color: #5e4576; width: 110px; height: 2.5px; transform: rotateZ(5deg);"></div>
+                <div style="position: absolute; top: 592.5px; left: 1250px; background-color: #5e4576; width: 110px; height: 2.5px; transform: rotateZ(-8deg);"></div>
+                <div style="position: absolute; top: 577.5px; left: 1350px; background-color: #5e4576; width: 50px; height: 2.5px;"></div>
+                <div style="position: absolute; top: 587.5px; left: 1350px; background-color: #5e4576; width: 50px; height: 2.5px;"></div>
+                <!--Under Construction-->
+                <div style="position: absolute; top: 575px; left: 1400px; background-color: none; width: 400px; height: 5px; border-bottom: 5px dashed #f6a800;"></div>
+                <div style="position: absolute; top: 585px; left: 1400px; background-color: none; width: 400px; height: 5px; border-bottom: 5px dashed #f6a800;"></div>
+                <div style="position: absolute; top: 577.5px; left: 1400px; background-color: none; width: 250px; height: 2.5px; border-bottom: 2.5px dashed #5e4576;"></div>
+                <div style="position: absolute; top: 587.5px; left: 1400px; background-color: none; width: 250px; height: 2.5px; border-bottom: 2.5px dashed #5e4576;"></div>
+                <div style="position: absolute; top: 605px; left: 1650px; background-color: none; width: 90px; height: 5px; border-bottom: 5px dashed #5e4576; transform: rotateZ(45deg);"></div>
+                <div style="position: absolute; top: 615px; left: 1650px; background-color: none; width: 80px; height: 5px; border-bottom: 5px dashed #5e4576; transform: rotateZ(45deg);"></div>
+                <div class="interchange" id="182" style="position: absolute; top: 550px; left: 1250px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Perth Stadium</p></div>
+                    <div class="platform" id="BPK6"></div>
+                    <div class="platform" id="BPK5"></div>
+                    <div class="platform" id="BPK4"></div>
+                    <div class="platform" id="BPK3"></div>
+                    <div class="platform" id="BPK2"></div>
+                    <div class="platform" id="BPK1"></div>
+                </div>
+                <div class="interchange" id="80" style="position: absolute; top: 570px; left: 1350px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Burswood</p></div>
+                    <div class="platform" id="BUR2"></div>
+                    <div class="platform" id="BUR1"></div>
+                </div>
+                <div class="interchange" id="144" style="position: absolute; top: 570px; left: 1400px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Victoria Park</p></div>
+                    <div class="platform" id="VPK2"></div>
+                    <div class="platform" id="VPK1"></div>
+                </div>
+                <div class="interchange" id="84" style="position: absolute; top: 570px; left: 1450px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Carlisle</p></div>
+                    <div class="platform" id="CAR2"></div>
+                    <div class="platform" id="CAR1"></div>
+                </div>
+                <div class="interchange" id="125" style="position: absolute; top: 570px; left: 1500px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Oats Street</p></div>
+                    <div class="platform" id="OAT2"></div>
+                    <div class="platform" id="OAT1"></div>
+                </div>
+                <div class="interchange" id="133" style="position: absolute; top: 570px; left: 1550px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Queens Park</p></div>
+                    <div class="platform" id="QPK2"></div>
+                    <div class="platform" id="QPK1"></div>
+                </div>
+                <div class="interchange" id="82" style="position: absolute; top: 570px; left: 1600px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Cannington</p></div>
+                    <div class="platform" id="CAN2"></div>
+                    <div class="platform" id="CAN1"></div>
+                </div>
+                <div class="interchange" id="77" style="position: absolute; top: 570px; left: 1650px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Beckenham</p></div>
+                    <div class="platform" id="BEK2"></div>
+                    <div class="platform" id="BEK1"></div>
+                </div>
+                <div class="interchange" id="109" style="position: absolute; top: 570px; left: 1700px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Kenwick</p></div>
+                    <div class="platform" id="KEN2"></div>
+                    <div class="platform" id="KEN1"></div>
+                </div>
+                <div class="interchange" id="113" style="position: absolute; top: 570px; left: 1750px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Maddington</p></div>
+                    <div class="platform" id="MAD2"></div>
+                    <div class="platform" id="MAD1"></div>
+                </div>
+                <div class="interchange" id="102" style="position: absolute; top: 570px; left: 1800px;">
+                    <div class="label" style="top: -15px; left: -43px;"><p>Gosnells</p></div>
+                    <div class="platform" id="GOS2"></div>
+                    <div class="platform" id="GOS1"></div>
+                </div>
+            </div>
+            <div id="ellenbrook-line">
+                <div style="position: absolute; top: 430px; left: 1390px; background-color: none; width: 100px; height: 5px; transform: rotateZ(-45deg); border-top: #d2222c 5px dashed;"></div>
+                <div style="position: absolute; top: 440px; left: 1390px; background-color: none; width: 100px; height: 5px; transform: rotateZ(-45deg); border-top: #d2222c 5px dashed;"></div>
+            </div>
+            <div id="tc-link">
+                <div style="position: absolute; top: 640px; left: 1725px; background-color: none; width: 5px; height: 60px; border-left: 5px dashed #5e4576;"></div>
+                <div style="position: absolute; top: 645px; left: 1715px; background-color: none; width: 5px; height: 50px; border-left: 5px dashed #5e4576;"></div>
+                <div style="position: absolute; top: 728px; left: 1650px; background-color: none; width: 90px; height: 5px; border-bottom: 5px dashed #5e4576; transform: rotateZ(-45deg);"></div>
+                <div style="position: absolute; top: 720px; left: 1650px; background-color: none; width: 80px; height: 5px; border-bottom: 5px dashed #5e4576; transform: rotateZ(-45deg);"></div>
+                <div style="position: absolute; top: 750px; left: 740px; background-color: none; width: 920px; height: 5px; border-bottom: 5px dashed #5e4576;"></div>
+                <div style="position: absolute; top: 760px; left: 750px; background-color: none; width: 916px; height: 5px; border-bottom: 5px dashed #5e4576;"></div>
+                <div class="interchange" id="81" style="position: absolute; top: 745px; left: 900px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Ranford Road</p></div>
+                    <div class="platform" id="RRD1"></div>
+                    <div class="platform" id="RRD2"></div>
+                </div>
+                <div class="interchange" id="81" style="position: absolute; top: 745px; left: 1200px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Nicholson Road</p></div>
+                    <div class="platform" id="NRD1"></div>
+                    <div class="platform" id="NRD2"></div>
+                </div>
+                <div class="interchange" id="81" style="position: absolute; top: 745px; left: 1500px;">
+                    <div class="label" style="bottom: -15px; left: -43px;"><p>Thornlie</p></div>
+                    <div class="platform" id="THO1"></div>
+                    <div class="platform" id="THO2"></div>
+                </div>
+            </div>
+            <div class="interchange" id="127" style="position: absolute; top: 500px; left: 1000px;">
+                <div class="label" style="top: -15px; left: -43px;"><p>Perth</p></div>
+                <div class="platform" id="PER9"></div>
+                <div class="platform" id="PER8"></div>
+                <div class="platform" id="PER7"></div>
+                <div class="platform" id="PER6"></div>
+                <div class="platform" id="PER5"></div>
+                <div class="platform" id="PER4"></div>
+                <div class="platform-offline" id="PER3"><p style="position: absolute; top: -4px; left: -1px;">3</p></div>
+            </div>
+            <div class="interchange" id="116" style="position: absolute; top: 520px; left: 1075px;">
+                <div class="label" style="top: -15px; left: -43px;"><p>McIver</p></div>
+                <div class="platform" id="MCI4"></div>
+                <div class="platform" id="MCI3"></div>
+                <div class="platform" id="MCI2"></div>
+                <div class="platform" id="MCI1"></div>
+            </div>
+            <div class="interchange" id="87" style="position: absolute; top: 520px; left: 1150px;">
+                <div class="label" style="bottom: -15px; left: -43px;"><p>Claisebrook</p></div>
+                <div class="platform" id="CBK4"></div>
+                <div class="platform" id="CBK3"></div>
+                <div class="platform" id="CBK2"></div>
+                <div class="platform" id="CBK1"></div>
+            </div>
+            <div class="interchange diagonal" id="132" style="position: absolute; top: 580px; left: 970px; display: flex;">
+                <div class="label" style="top: -30px; left: 25px; transform: rotateZ(-45deg);"><p>Perth Underground</p></div>
+                <div class="platform" id="PER1"></div>
+                <div class="invisible"></div>
+                <div class="platform" id="PER2"></div>
+            </div>
+            <div class="interchange" id="76" style="position: absolute; top: 440px; left: 1400px;">
+                <div class="label" style="top: -15px; left: -43px;"><p>Bayswater</p></div>
+                <div class="platform" id="BAY4"></div>
+                <div class="platform" id="BAY3"></div>
+                <div class="platform" id="BAY2"></div>
+                <div class="platform" id="BAY1"></div>
+            </div>
+            <div class="interchange" id="76" style="position: absolute; top: 440px; left: 1400px;">
+                <div class="platform" id="?PL?"></div>
+            </div>
+        </div>
+        <div style="position: absolute; bottom: 50px; left: 50px; color: white;">
+            <p id="date">Month XXth, 20XX</p>
+            <h2 id="clock">00:00:00</h2>
+        </div>
+        
+    </body>
+    <script>
+        // // PERTH STADIUM BPK // //
+            // 1 To Perth (Express)
+            //  2 To Perth
+            // 3 To/From Freo
+            // 4 To/From Joondy
+            //  5 To Vic Park
+            // 6 Arrivals from Perth Side (events or express)
+        // // PERTH PER // //
+            // 4 to Thornlie (terminus)
+            // 5 to Armadale (terminus)
+            // 6 Armadale Line -> Fremantle Line, either midday terminating trains from HW, empty, or event services (usually Armadale C peak services)
+            // 7 to Fremantle/Claremont (through from Midland/High Wycombe)
+            // 8 to Midland/High Wycombe (through from Fremantle/Claremont)
+            // 9 for special or empty services
+        // // BAYSWATER BAY // //
+            // 1 is to Perth from Midland/High Wycombe 
+            // 2 is to Perth from Ellenbrook 
+            // 3 is to Ellenbrook 
+            // 4 is to Midland/High Wycombe
+        // // Sidings // //
+            // Claremont
+            // Showgrounds (P3 but they use it as a siding)
+            // WL
+            // Daglish 
+            // Bayswater 
+            // Stadium, Burswood, Vic Park (Stadium stows)
+            // Cockburn 
+            // Whitfords
+        //
+        // scaling, but that's not really a problem just gets silly if you zoom in LOL
+        // i do think the addition of the future projects clutters it a bit, especially with the box you're putting around it (on that note as well, where's MEL? and why does armadale line only go up to gosnells?)
+        // the selected trip lagging behind the updating (just saw you mention this)
+        // considering you mark airport central with an airplane, you could do the same for redcliffe + adding the terminal numbers (also adding a certain special events "E" for showgrounds!)
+        // this is a bit more picky, but just for continuity between the tracker and app some of the station names are different - official network uses "Mt Lawley" not "Mount Lawley", "Stadium" not "Perth Stadium"
+        // every other terminus' name is below or above the station, but fremantle's is next to it?
+        // the perth station platform 3 marker is too big for the box :kek:
+        // again, VERY picky but the PUG marker could be horizontal rather than slanted :isaac_shrug:
+        // despite the fact you've included platform 9, there are no tracks leading out of it even though trains do run on it. i know it serves multiple lines when needed but it would be nice to show it's actually used as well (i can understant the lack of tracks for P3 because it's a TransWA platform).
+        // maybe some marker to point out that Nowergup Depot isn't a station stop :kek: :kek: :kek: i know it says "Depot" but there are some examples all over the world of stuff like that which are publicly accessible so maybe just a hint? also, why include nowergup depot but not claisebrook or mandurah? as well as this... ✨ sidings ✨
+        // showgrounds has three platforms, not two
+        // if you've included the australind platform at perth, you could also include the other regional platforms at east perth and midland 🤷‍♀️
+
+        const NS_URI = "http://services.pta.wa.gov.au/";
+        const secondDigitIsNine = /^\d9/;
+
+        const lineColors = {
+            "Airport Line": "#44c2b2",
+            "Armadale Line": "#f6a800",
+            "Fremantle Line": "#003a79",
+            "Joondalup Line": "#959300",
+            "Mandurah Line": "#d25f15",
+            "Midland Line": "#960048",
+            "Morley-Ellenbrook Line": "#d2222c",
+            "Thornlie Line": "#f6a800"
+        };
+
+        function convertDelay(seconds) {
+            const absSeconds = Math.abs(seconds);
+            const minutes = Math.floor(absSeconds / 60);
+            const remainingSeconds = absSeconds % 60;
+
+            if (seconds < 0) {
+                return `Early by ${minutes}m ${remainingSeconds}s`;
+            } else {
+                return `Delayed by ${minutes}m ${remainingSeconds}s`;
+            }
+        }
+
+        let previousRunId = null;
+        let lastDisplayedTrip = null;
+
+        function displayServiceInfo(trip) {
+            lastDisplayedTrip = trip;
+            const infoElement = document.getElementById('service-info');
+            const carsText = (trip.cars === '0' || secondDigitIsNine.test(trip.run)) ? 'C Series' : 
+                (trip.cars === '2' || trip.cars === '4') ? 'A Series' : 
+                (trip.cars === '3' || trip.cars === '6') ? 'B Series' : 'Unknown Type';
+            const statusType = trip.state === 'Appr' ? `Approaching ${trip.runPlatform}<br>Departs at ${trip.sched}` :
+                trip.state === 'Plat' ? `At ${trip.runPlatform}<br>Departs at ${trip.sched}` : `Scheduled to Depart ${trip.runPlatform}<br>at ${trip.sched}`;
+
+            if (previousRunId) {
+                const previousElement = document.getElementById(previousRunId);
+                if (previousElement) {
+                    previousElement.classList.remove('selected-trip');
+                }
+            }
+
+            const currentElement = document.getElementById(trip.run);
+            if (currentElement) {
+                currentElement.classList.add('selected-trip');
+            }
+
+            previousRunId = trip.run;
+
+            infoElement.innerHTML = `
+                <h3>${trip.cars} Car (${carsText})</h3>
+                <p>${trip.run} / ${trip.tripId} / ${trip.uid}</p>
+                <h2 style="color: ${lineColors[trip.line]}">For ${trip.dest}</h2>
+                <p>${statusType}</p>
+                <i>${trip.actual}</i>
+                <i>${convertDelay(trip.delay)}</i>
+            `;
+        }
+
+        function findAndUpdateLastDisplayedTrip(trips) {
+            if (!lastDisplayedTrip) return;
+
+            const updatedTrip = trips.find(trip => trip.run === lastDisplayedTrip.run);
+            if (updatedTrip) {
+                displayServiceInfo(updatedTrip);
+            }
+        }
+      
+        function parseXML(xmlString) {
+            const parser = new DOMParser();
+            const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+            const parserError = xmlDoc.getElementsByTagName("parsererror");
+            if (parserError.length) {
+                console.error("parseXML(error):", parserError[0].textContent);
+                throw new Error("Error parsing XML");
+            }
+            return xmlDoc;
+        }
+      
+        function clearPlatforms() {
+            document.querySelectorAll('.platform').forEach(platform => platform.innerHTML = '');
+            document.querySelectorAll('#depot').forEach(platform => platform.innerHTML = '');
+        }
+      
+        function drawTrips(xmlDoc) {
+            const trips = Array.from(xmlDoc.getElementsByTagNameNS(NS_URI, 'Trip'));
+            const line = xmlDoc.getElementsByTagNameNS(NS_URI, 'LineName')[0].textContent;
+        
+            const platforms = {};
+            trips.forEach(trip => {
+                const tripId = trip.getElementsByTagNameNS(NS_URI, 'TripId')[0].textContent;
+                const run = trip.getElementsByTagNameNS(NS_URI, 'Run')[0].textContent;
+                const uid = trip.getElementsByTagNameNS(NS_URI, 'Uid')[0].textContent;
+                const cancelled = trip.getElementsByTagNameNS(NS_URI, 'Cancelled')[0].textContent;
+                const cars = trip.getElementsByTagNameNS(NS_URI, 'Ncar')[0].textContent;
+                const state = trip.getElementsByTagNameNS(NS_URI, 'State')[0].textContent;
+                const runPlatform = trip.getElementsByTagNameNS(NS_URI, 'RunPlatform')[0].textContent;
+                const patterncode = trip.getElementsByTagNameNS(NS_URI, 'Patterncode')[0].textContent;
+                const sched = trip.getElementsByTagNameNS(NS_URI, 'Schedule')[0].textContent;
+                const actual = trip.getElementsByTagNameNS(NS_URI, 'Actual')[0].textContent;
+                const delay = trip.getElementsByTagNameNS(NS_URI, 'Delay')[0].textContent;
+                const dest = trip.getElementsByTagNameNS(NS_URI, 'Destination')[0].textContent;
+        
+                if (!platforms[runPlatform]) platforms[runPlatform] = { plat: [], appr: [], pred: [] };
+                if (state === 'Plat') {
+                    platforms[runPlatform].plat.push({ tripId, run, uid, cancelled, cars, state, runPlatform, patterncode, sched, actual, delay, dest, line });
+                } else if (state === 'Appr') {
+                    platforms[runPlatform].appr.push({ tripId, run, uid, cancelled, cars, state, runPlatform, patterncode, sched, actual, delay, dest, line });
+                } else if (state === 'Pred') {
+                    platforms[runPlatform].pred.push({ tripId, run, uid, cancelled, cars, state, runPlatform, patterncode, sched, actual, delay, dest, line });
+                }
+            });
+
+            findAndUpdateLastDisplayedTrip(trips);
+        
+            for (const platformId in platforms) {
+                const platform = document.getElementById(platformId);
+                const depot = document.getElementById('depot');
+
+                if (!platform) {
+                    const platTrips = platforms[platformId].plat[0];
+                    const apprTrips = platforms[platformId].appr[0];
+                    const predTrips = platforms[platformId].pred[0];
+                    console.warn(`Platform ${platformId} not found.`, platTrips, apprTrips, predTrips);
+                    continue;
+                }
+        
+                if (platforms[platformId].plat.length > 0) {
+                    const trip = platforms[platformId].plat[0];
+                    const tripElement = document.createElement('div');
+                    tripElement.classList.add(`trip`);
+                    tripElement.id = trip.run;
+                    if ((trip.cars == '0' || 0) || (secondDigitIsNine.test(trip.run))) {
+                        tripElement.style.backgroundColor = 'blue';
+                        tripElement.style.color = 'white';
+                    } else {
+                        tripElement.style.backgroundColor = 'lime';
+                        tripElement.style.color = 'black';
+                    }
+                    if ([
+                        'MAN1', 'MAN2', 'LAL1', 'WAR1', 'RCK1', 'WRD1', 'KWI1', 'AUB1', 'COC1', 'MUR1', 'BUL1', 'CBR1', 
+                        'BUT1', 'BUT2', 'LED1', 'GLN1', 'STG1', 'WRK1', 'GRN1', 'WTF1', 'EDG1', 'JDP1', 'CUR1', 'CLK1',
+                        'PER8', 'PER5', 'PER4', 'MCI4', 'MCI2', 'CBK4', 'CBK2', 'BPK6', 'BPK5',
+                        'BUR2', 'VPK2', 
+                        'EPR2', 'MLY2', 'MAY2', 'MEL2', '?PL?', 'BAY4', 'BAY3', 'ASH2', 'BAS2', 'SUC2', 'GFD2', 'WBG2',
+                        'EGF2', 'RED2', 'APT2',
+                        'CWS1', 'WLE1', 'SUB1', 'DAG1', 'SPK1', 'KAR1', 'LOC1', 'SHO1', 'CLA1', 'SBN1', 'GRT1', 'COT1',
+                        'MOS1', 'VST1', 'NFR1', 'FRE1', 'FRE2', 'FRE3'
+                    ].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(-30px)';
+                    } else if (['ESP1', 'PER1'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'rotate(-45deg) translate(-25px, -15px)';
+                    }
+                    tripElement.innerHTML = `<p>${trip.cars}-${trip.run}</p>`;
+                    tripElement.addEventListener('click', () => displayServiceInfo(trip));
+                    platform.appendChild(tripElement);
+                }
+        
+                if (platforms[platformId].appr.length > 0) {
+                    const trip = platforms[platformId].appr[0];
+                    const tripElement = document.createElement('div');
+                    tripElement.classList.add(`trip`);
+                    if ((trip.cars == '0' || 0) || (secondDigitIsNine.test(trip.run))) {
+                        tripElement.style.backgroundColor = 'blue';
+                        tripElement.style.color = 'white';
+                    } else {
+                        tripElement.style.backgroundColor = 'yellow';
+                        tripElement.style.color = 'black';
+                    }
+                    if (['MAN1'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translate(20px, 10px)';
+                    } else if (['MAN2'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translate(20px, 0px)';
+                    } else if (['LAL1', 'WAR1', 'RCK1', 'WRD1', 'KWI1', 'AUB1', 'COC1', 'MUR1', 'BUL1', 'CBR1'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(-60px)';
+                        tripElement.style.flexDirection = 'row-reverse';
+                    } else if (['LAL2', 'WAR2', 'RCK2', 'WRD2', 'KWI2', 'AUB2', 'COC2', 'MUR2', 'BUL2'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(20px)';
+                    } else if (trip.runPlatform == 'ESP1') {
+                        tripElement.style.transform = 'rotate(-65deg) translate(-45px, -15px)';
+                    } else if (trip.runPlatform == 'ESP2') {
+                        tripElement.style.transform = 'rotate(-45deg) translate(5px, -45px)';
+                    } else if (trip.runPlatform == 'PER1') {
+                        tripElement.style.transform = 'rotate(-45deg) translate(-45px, -15px)';
+                    } else if (trip.runPlatform == 'PER2') {
+                        tripElement.style.transform = 'rotate(-45deg) translate(5px, -150px)';
+                    } else if (trip.runPlatform == 'CBR2') {
+                        tripElement.style.transform = 'rotate(-20deg) translate(25px, -2px)';
+                    } else if (trip.runPlatform == 'LED2') {
+                        tripElement.style.transform = 'translate(35px, 70px)';
+                    } else if (['BUT1'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translate(13px, 10px)';
+                    } else if (['BUT2'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translate(13px, 0px)';
+                    } else if (['LED1', 'GLN1', 'STG1', 'WRK1', 'GRN1', 'WTF1', 'EDG1', 'JDP1', 'CUR1', 'CLK1'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(-47px)';
+                    } else if (['LED2', 'GLN2', 'STG2', 'WRK2', 'GRN2', 'WTF2', 'EDG2', 'JDP2', 'CUR2', 'CLK2'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(13px)';
+                        tripElement.style.flexDirection = 'row-reverse';
+                    } else if ([ 'CWS1', 'WLE1', 'SUB1', 'DAG1', 'SPK1', 'KAR1', 'LOC1', 'SHO1', 'CLA1', 'SBN1', 'GRT1', 'COT1',
+                        'MOS1', 'VST1', 'NFR1'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(-42px)';
+                    } else if ([ 'CWS2', 'WLE2', 'SUB2', 'DAG2', 'SPK2', 'KAR2', 'LOC2', 'SHO2', 'CLA2', 'SBN2', 'GRT2', 'COT2',
+                        'MOS2', 'VST2', 'NFR2'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(8px)';
+                    } else if (['FRE1'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translate(8px, 10px)';
+                    } else if (['FRE2'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translate(8px, 0px)';
+                    } else if (['FRE3'].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translate(8px, -10px)';
+                    } else if ([
+                        'PER8', 'PER5', 'PER4', 'MCI4', 'MCI2', 'CBK4', 'CBK2', 'BPK6', 'BPK5', 'BUR2', 'VPK2', 
+                        'EPR2', 'MLY2', 'MAY2', 'MEL2', '?PL?', 'BAY4', 'BAY3', 'ASH2', 'BAS2', 'SUC2', 'GFD2', 
+                        'EGF2', 'WBG2',
+                        'RED2', 'APT2'
+                    ].includes(trip.runPlatform)) {
+                        tripElement.style.transform = 'translateX(-40px)';
+                    }
+                    tripElement.innerHTML = `<p>${trip.cars}-${trip.run}</p>`;
+                    tripElement.addEventListener('click', () => displayServiceInfo(trip));
+                    platform.appendChild(tripElement);
+                }
+
+                try {
+                    if (platforms[platformId].pred.some(trip => (trip.cars == '0' || 0) || (secondDigitIsNine.test(trip.run)))) {
+                        const trip = platforms[platformId].pred.find(trip => (trip.cars == '0' || 0) || (secondDigitIsNine.test(trip.run)));
+                        const tripElement = document.createElement('div');
+                        const cserieselement = document.createElement('div');
+                        tripElement.classList.add('pred-trip');
+                        cserieselement.classList.add('cseriesdepot');
+                        if (lineColors[trip.line]) {
+                            tripElement.style.backgroundColor = lineColors[trip.line];
+                        } else {
+                            tripElement.style.backgroundColor = 'gray';
+                        }
+                        tripElement.style.color = 'white';
+                        const currentTime = new Date();
+                        const [schedHours, schedMinutes, schedSeconds] = trip.sched.split(':').map(Number);
+                        const scheduledTime = new Date(currentTime);
+                        scheduledTime.setHours(schedHours, schedMinutes, schedSeconds);
+                        let timeUntilDeparture = Math.floor((scheduledTime - currentTime) / 60000);
+                        if (timeUntilDeparture < 0) {
+                            timeUntilDeparture = 0;
+                        }
+                        tripElement.innerHTML = `<p>${trip.cars}-${trip.run}<br>For ${trip.dest}<br>Departs ${trip.runPlatform}<br>in ${timeUntilDeparture}min (${trip.sched})</p>`;
+                        tripElement.appendChild(cserieselement);
+                        depot.appendChild(tripElement);
+                    } else if (platforms[platformId].pred.length > 0) {
+                        const trip = platforms[platformId].pred[0];
+                        const tripElement = document.createElement('div');
+                        if (lineColors[trip.line]) {
+                            tripElement.style.backgroundColor = lineColors[trip.line];
+                        } else {
+                            tripElement.style.backgroundColor = 'gray';
+                        }
+                        tripElement.style.color = 'white';
+                        tripElement.classList.add('pred-trip');
+                        const currentTime = new Date();
+                        const [schedHours, schedMinutes, schedSeconds] = trip.sched.split(':').map(Number);
+                        const scheduledTime = new Date(currentTime);
+                        scheduledTime.setHours(schedHours, schedMinutes, schedSeconds);
+                        let timeUntilDeparture = Math.floor((scheduledTime - currentTime) / 60000);
+                        if (timeUntilDeparture < 0) {
+                            timeUntilDeparture = 0;
+                        }
+                        tripElement.innerHTML = `<p>${trip.cars}-${trip.run}<br>For ${trip.dest}<br>Departs ${trip.runPlatform}<br>in ${timeUntilDeparture}min (${trip.sched})</p>`;
+                        depot.appendChild(tripElement);
+                    }
+                } catch (error) {
+                    console.error(error);
+                }
+            }
+        }
+      
+        let fetching = false;
+      
+        function fetchData() {
+            if (fetching) {
+                console.log("Fetch already in progress");
+                return;
+            }
+            fetching = true;
+            fetch('https://tptracker.azurewebsites.net/data')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`Network response was not ok`);
+                    }
+                    return response.text();
+                })
+                .then(data => {
+                    const parsedData = JSON.parse(data);
+                    clearPlatforms();
+                    for (const [line, xmlString] of Object.entries(parsedData)) {
+                        try {
+                            const xmlDoc = parseXML(xmlString);
+                            drawTrips(xmlDoc);
+                        } catch (error) {
+                            console.error(`Error parsing or updating data for ${line}:`, error);
+                        }
+                    }
+                })
+                .catch(error => console.error(`Error fetching data:`, error))
+                .finally(() => {
+                    fetching = false;
+                    if (previousRunId) {
+                        const previousElement = document.getElementById(previousRunId);
+                        if (previousElement) {
+                            previousElement.classList.add('selected-trip');
+                        }
+                    }
+                });
+        }
+
+
+        function updateClockAndDate() {
+            const now = new Date();
+            
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            const currentTime = `${hours}:${minutes}:${seconds}`;
+            document.getElementById('clock').textContent = currentTime;
+            
+            const monthNames = [
+                'January', 'February', 'March', 'April', 'May', 'June',
+                'July', 'August', 'September', 'October', 'November', 'December'
+            ];
+            const month = monthNames[now.getMonth()];
+            const day = now.getDate();
+            const daySuffix = (day) => {
+                if (day > 3 && day < 21) return 'th';
+                switch (day % 10) {
+                    case 1: return 'st';
+                    case 2: return 'nd';
+                    case 3: return 'rd';
+                    default: return 'th';
+                }
+            };
+            const year = now.getFullYear();
+            const currentDate = `${month} ${day}${daySuffix(day)}, ${year}`;
+            document.getElementById('date').textContent = currentDate;
+        }
+
+        updateClockAndDate();
+        setInterval(updateClockAndDate, 1000);
+      
+        document.addEventListener('DOMContentLoaded', fetchData);
+        setInterval(() => {
+            fetchData();
+        }, 5000);
+      </script>
+      
+</html>
